@@ -1,0 +1,236 @@
+﻿@model ProductSearchViewModel
+@{
+    ViewBag.Title = "ProductTable";
+}
+@*<link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css" />
+<script src="//cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>*@
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.2/jquery.validate.min.js"></script>
+
+<div>
+    <form method="post">
+        <div class="row">
+            <div class="col-6">
+            <input class="form-control mb-2" id="searchTxt" name="Search" />
+            </div>
+            <div class="col-6">
+                <button type="button" id="searchBtn">Search</button>
+                <button type="button" id="resetBtn">Reset</button>
+                <button type="button" id="newBtn">New</button>
+            </div>
+        </div>
+    </form>
+</div>
+<div>
+    <table id="ProductsTable" class="table table-striped">
+        <thead>
+            <tr>
+                <th class="font-weight-bold">Product Name </th>
+                <th class="font-weight-bold">Category </th>
+                <th class="font-weight-bold">Price </th>
+                <th class="font-weight-bold">Actions </th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Products != null && Model.Products.Count > 0)
+            {
+
+                foreach (var product in Model.Products) {
+                    <tr>
+                        <td>@product.Name</td>
+                        <td>@product.Category.Name</td>
+                        <td>@product.Price</td>
+                        <td>
+                            <button class="editBtn" data-id="@product.ID">Edit</button>
+                            <button class="deleteBtn" data-id="@product.ID">Delete</button>
+                            @*<button class="addToCart" data-id="@product.ID">Add To Cart</button>*@
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td class="text-danger">No Products Found</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <div>
+        @if (Model.Pager != null && Model.Pager.TotalPages > 1)
+        {
+            if (Model.Pager.CurrentPage > 1)
+            {
+                <button class="pageButtons" data-pageno="1">First</button>
+                <button class="pageButtons" data-pageno="@Model.Pager.CurrentPage-1">Previous</button>
+            }
+
+            for (var page = Model.Pager.StartPage; page <= Model.Pager.EndPage; page++)
+            {
+                string activeClass = Model.Pager.CurrentPage == page ? "active bg-info" : string.Empty;
+                <button class="@activeClass pageButtons" data-pageno="@page">@page</button>
+            }
+
+            if (Model.Pager.CurrentPage < Model.Pager.TotalPages)
+            {
+                <button class="pageButtons" data-pageno="@Model.Pager.EndPage">Last</button>
+                <button class="pageButtons" data-pageno="@(Model.Pager.CurrentPage+1)">Next</button>
+            }
+        }
+    </div>
+</div>
+
+
+<script>
+    //We are putting edit Delete and Add to cart button click listner inside fdrawCallback method becaues we are using datatable.If we not add it inside
+    // the fnDrawCallback then the click on these button will not work in pagination.
+    //$('#ProductsTable').DataTable({
+    //    "fnDrawCallback": function (oSettings) {
+
+            
+    //    }
+    //});
+
+
+    $(".editBtn").click(function () {
+                $.ajax(
+                {
+                    url:'@Url.Action("Edit","Product")', /*'/Product/Edit',*/
+                    data: {
+                        ID: $(this).attr('data-id')
+                    }
+                }).done(function (response) {
+                    $("#actionContainer").html(response);
+                    focusAction("actionContainer");
+
+                }).fail(function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("Fail");
+                });
+    });
+
+    $(".deleteBtn").click(function () {
+            //Below is the sweet alert modal.
+            swal({
+                title: "Confirm",
+                text: "Are you sure you want to Delete Product?",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+            })
+            .then((willDelete) => {
+                 if (willDelete) {
+                        $.ajax(
+                        {
+                                type: 'POST',
+                                url:'@Url.Action("Delete","Product")', /*'/Product/Delete',*/
+                                data: {
+                                    ID: $(this).attr('data-id')
+                                }
+                        }).done(function (response) {
+                                $("#tableContainer").html(response);
+                                swal("Record deleted Successfully.", {
+                                    icon: "success",
+                                });
+
+                        }).fail(function (XMLHttpRequest, textStatus, errorThrown) {
+                                alert("Fail");
+                        });
+                 }
+             });
+    });
+    //var products = [];
+    //$(".addToCart").click(function () {
+    //                var ProductId = $(this).attr("data-id");
+    //                products.push(ProductId);
+    //                //We can set cookie using jquery function $.cookie('cookie name','value of cookie').
+    //                $.cookie('CartProducts', products.join('-'), { path: '/' });
+    //                alert("Product Added To Cart");
+    //});
+    $(".pageButtons").click(function () {
+        $.ajax(
+            {
+                url: '@Url.Action("ProductTable", "Product")', /*'/Product/ProductTable',*/
+                data:
+                {
+                    pageNo: $(this).attr("data-pageno")
+
+                }
+            }).done(function (response) {
+                $("#tableContainer").html(response);
+
+            }).fail(function (XMLHttpRequest, textStatus, errorThrown) {
+                alert("Fail");
+            });
+
+    });
+    $("#searchBtn").click(function () {
+        var searchValue = $("#searchTxt").val();
+        $.ajax(
+            {
+                url:'@Url.Action("ProductTable","Product")', /*'/Product/ProductTable',*/
+                data: {
+                    search: searchValue
+                }
+            }).done(function (response) {
+                $("#tableContainer").html(response);
+
+            }).fail(function (XMLHttpRequest, textStatus, errorThrown) {
+                alert("Fail");
+            });
+
+    });
+
+    $("#resetBtn").click(function () {
+        var searchValue = "";
+        $.ajax(
+            {
+                url:'@Url.Action("ProductTable","Product")', /*'/Product/ProductTable',*/
+                data: {
+                    search: searchValue
+                }
+            }).done(function (response) {
+                $("#tableContainer").html(response);
+
+            }).fail(function (XMLHttpRequest, textStatus, errorThrown) {
+                alert("Fail");
+            });
+
+    });
+
+    $("#newBtn").click(function () {
+        $.ajax(
+            {
+                url:'@Url.Action("Create","Product")', /*'/Product/Create',*/
+            }).done(function (response) {
+                $("#actionContainer").html(response);
+                focusAction("actionContainer");
+
+            }).fail(function (XMLHttpRequest, textStatus, errorThrown) {
+                alert("Fail");
+            });
+
+    });
+
+
+
+        //Below is the Jquery modal
+        //var confirmDelete = confirm("Are you sure you want to Delete Product");
+        //if (confirmDelete) {
+        //    $.ajax(
+        //        {
+        //            type: 'POST',
+        //            url: '/Product/Delete',
+        //            data: {
+        //                ID: $(this).attr('data-id')
+        //            }
+        //        }).done(function (response) {
+        //            $("#tableContainer").html(response);
+
+        //        }).fail(function (XMLHttpRequest, textStatus, errorThrown) {
+        //            alert("Fail");
+        //        });
+        //}
+        //else {
+
+        //}
+</script>

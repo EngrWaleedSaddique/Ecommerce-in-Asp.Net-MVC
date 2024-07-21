@@ -1,0 +1,13 @@
+﻿@model ECommerce.Entities.Category
+@{
+    ViewBag.Title = "Delete";
+}
+
+<h2>Delete</h2>
+<h1>Are you want to delete this Category</h1>
+<form method="post">
+    <input type="hidden" name="ID" value="@Model.ID" />
+    <button type="submit">Yes Delete</button>
+</form>
+<a href="/index">Cancel</a>
+

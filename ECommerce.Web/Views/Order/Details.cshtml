@@ -1,0 +1,107 @@
+﻿@model OrdersDetailViewModel
+@if (Model != null && Model.Order!=null)
+{
+    var i = 1;
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 order-md-2 mb-4">
+                <h4 class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted">Your cart</span>
+                    <span class="badge badge-secondary badge-pill">3</span>
+                </h4>
+                <ul class="list-group mb-3">
+                    @foreach (var orderItem in Model.Order.OrderItems)
+                    {
+                        <li class="list-group-item d-flex justify-content-between lh-condensed" data-id="@orderItem.ID">
+                            <div>
+                                <h6 class="my-0">@i -@orderItem.Product.Name - QTY:@orderItem.Quantity</h6>
+                                <small class="text-muted">@(orderItem.Product.Description.Length>100?orderItem.Product.Description.Substring(0,99):orderItem.Product.Description)</small>
+                            </div>
+                            <span class="text-muted">Unit Price: $@orderItem.Product.Price - TotalPrice:(@(orderItem.Quantity * orderItem.Product.Price))</span>
+                        </li>
+                        i++;
+                    }
+
+
+
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Total (USD)</span>
+                        <strong>$ @Model.Order.TotalAmount</strong>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-md-8 order-md-1">
+                <h4 class="mb-3">Billing address</h4>
+                <form class="needs-validation" novalidate="">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="firstName">Name</label>
+                            <input type="text" class="form-control" id="Name" placeholder="" value="@Model.OrderBy.Name" required="">
+                            <div class="invalid-feedback">
+                                Valid first name is required.
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="mb-3">
+                        <label for="email">Email</label>
+                        <input type="email" class="form-control" id="Email" value="@Model.OrderBy.Email" placeholder="you@example.com">
+                        <div class="invalid-feedback">
+                            Please enter a valid email address for shipping updates.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="address">Address</label>
+                        <input type="text" class="form-control" id="address" placeholder="1234 Main St" value="@Model.OrderBy.Address" required="">
+                        <div class="invalid-feedback">
+                            Please enter your shipping address.
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="status">Status</label>
+                        <select name="Status" id="changeStatus">
+                            @foreach (var availablestatus in Model.AvailableStatuses)
+                            {
+                                var isSelectedStatus = availablestatus == Model.Order.Status;
+                                <option @(isSelectedStatus? "selected":string.Empty)>@availablestatus</option>
+                            }
+                        </select>
+                    </div>
+                    
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $("#changeStatus").change(function () {
+        $.ajax(
+            {
+                url: '@Url.Action("ChangeStatus", "Order")', /*'/Product/ProductTable',*/
+                data:
+                {
+                    status: $("#changeStatus").val(),
+                    ID:'@Model.Order.ID'
+
+                }
+            }).done(function (response) {
+                if (response.Success) {
+                    swal("Done", "Your Status has been Updated.", "success");
+                }
+                else {
+                    swal("Error", "Unable to update Order", "success");
+                }
+
+            }).fail(function (XMLHttpRequest, textStatus, errorThrown) {
+                alert("Fail");
+            });
+    });
+    </script>
+}
+else
+{
+    <div>
+        <h1>Orders Details Not Available.</h1>
+    </div>
+}

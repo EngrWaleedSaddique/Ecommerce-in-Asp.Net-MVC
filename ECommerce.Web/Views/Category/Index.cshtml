@@ -1,0 +1,24 @@
+﻿
+@{
+    ViewBag.Title = "Categories";
+}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.2/jquery.validate.min.js"></script>
+<div class="container">
+    <h2>Categories</h2>
+    <div id="tableContainer">
+        @{
+            Html.RenderAction("CategoryTable");
+            //Html.RenderAction("Create");
+        }
+    </div>
+    <div id="actionContainer">
+
+    </div>
+</div>
+<script>
+    function focusAction(controlToFocus) {
+        $('html,body').animate({
+            scrollTop: $("#" + controlToFocus).offset().top - 100
+        }, 1000);
+    }
+</script>

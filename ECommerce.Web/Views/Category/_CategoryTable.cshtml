@@ -1,0 +1,181 @@
+﻿@model CategorySearchViewModel
+@{
+    ViewBag.Title = "Categories";
+}
+
+<div>
+    <form method="post">
+        <div class="row">
+            <div class="col-6">
+                <input class="form-control mb-2" id="searchTxt" name="Search" value="@Model.SearchTerm" />
+            </div>
+            <div class="col-6">
+                <button type="button" id="searchBtn">Search</button>
+                <button type="button" id="resetBtn">Reset</button>
+                <button type="button" id="newBtn">New</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+<div>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th class="font-weight-bold">Category Name </th>
+                <th class="font-weight-bold">Category Description </th>
+                <th class="font-weight-bold">Is Featured? </th>
+                <th class="font-weight-bold">No Of Products </th>
+                <th class="font-weight-bold">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var category in Model.Categories)
+            {
+                <tr>
+                    <td>@category.Name</td>
+                    <td>@category.Description</td>
+                    <td>@category.isFeatured</td>
+                    <td>@category.Products.Count</td>
+                    <td>
+                        <button class="editBtn" data-id="@category.ID">Edit</button>
+                        <button class="deleteBtn" data-id="@category.ID">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <div>
+        @if (Model.Pager != null&& Model.Pager.TotalPages>1)
+        {
+            if (Model.Pager.CurrentPage > 1)
+            {
+                <button class="pageButtons" data-pageno="1">First</button>
+                <button class="pageButtons" data-pageno="@Model.Pager.CurrentPage-1">Previous</button>
+            }
+
+            for (var page = Model.Pager.StartPage; page <= Model.Pager.EndPage; page++)
+            {
+                string activeClass = Model.Pager.CurrentPage == page ? "active bg-info" : string.Empty;
+                <button class="@activeClass pageButtons" data-pageno="@page">@page</button>
+            }
+
+            if (Model.Pager.CurrentPage < Model.Pager.TotalPages)
+            {
+                <button class="pageButtons" data-pageno="@Model.Pager.EndPage">Last</button>
+                <button class="pageButtons" data-pageno="@(Model.Pager.CurrentPage+1)">Next</button>
+            }
+        }
+    </div>
+</div>
+<script>
+    $(".pageButtons").click(function () {
+        $.ajax(
+            {
+                url: '@Url.Action("CategoryTable", "Category")', /*'/Product/ProductTable',*/
+                data:
+                {
+                    pageNo: $(this).attr("data-pageno"),
+                    search:'@Model.SearchTerm'
+
+                }
+            }).done(function (response) {
+                $("#tableContainer").html(response);
+
+            }).fail(function (XMLHttpRequest, textStatus, errorThrown) {
+                alert("Fail");
+            });
+
+    });
+    $("#searchBtn").click(function () {
+        var searchValue = $("#searchTxt").val();
+        $.ajax(
+            {
+                url:'@Url.Action("CategoryTable","Category")',/*'/Category/CategoryTable',*/
+                data: {
+                    search: searchValue
+                }
+            }).done(function (response) {
+                $("#tableContainer").html(response);
+
+            }).fail(function (XMLHttpRequest, textStatus, errorThrown) {
+                alert("Fail");
+            });
+
+    });
+
+    $("#resetBtn").click(function () {
+        var searchValue ="";
+        $.ajax(
+            {
+                url:'@Url.Action("CategoryTable","Category")',/*'/Category/CategoryTable',*/
+                data: {
+                    search: searchValue
+                }
+            }).done(function (response) {
+                $("#tableContainer").html(response);
+
+            }).fail(function (XMLHttpRequest, textStatus, errorThrown) {
+                alert("Fail");
+            });
+
+    });
+
+    $("#newBtn").click(function () {
+        $.ajax(
+            {
+                url:'@Url.Action("Create","Category")', /*'/Category/Create',*/
+            }).done(function (response) {
+                $("#actionContainer").html(response);
+                focusAction("actionContainer");
+
+            }).fail(function (XMLHttpRequest, textStatus, errorThrown) {
+                alert("Fail");
+            });
+
+    });
+
+    $(".editBtn").click(function () {
+        $.ajax(
+            {
+                url:'@Url.Action("Edit","Category")', /*'/Category/Edit',*/
+                data: {
+                    ID: $(this).attr('data-id'),
+                    search: $("#searchTxt").val()
+                }
+            }).done(function (response) {
+                $("#actionContainer").html(response);
+                focusAction("actionContainer");
+
+
+            }).fail(function (XMLHttpRequest, textStatus, errorThrown) {
+                alert("Fail");
+            });
+
+    });
+
+    $(".deleteBtn").click(function () {
+        var confirmDelete = confirm("Are you sure you want to Delete Product");
+        if (confirmDelete) {
+            $.ajax(
+                {
+                    type: 'POST',
+                    url: '@Url.Action("Delete","Category")',/*'/Category/Delete',*/
+                    data: {
+                        ID: $(this).attr('data-id')
+                    }
+                }).done(function (response) {
+                    $("#tableContainer").html(response);
+
+                }).fail(function (XMLHttpRequest, textStatus, errorThrown) {
+                    alert("Fail");
+                });
+        }
+        else {
+
+        }
+
+
+    });
+</script>

@@ -1,0 +1,128 @@
+﻿@model List<Category>
+@{
+    ViewBag.Title = "Create Category";
+}
+
+<h2>Add New Category</h2>
+<form id="createCategory">
+    <div class="form-group">
+        <label>Name<span class="text-danger">*</span></label>
+        <input class="form-control" name="Name" />
+        <br />
+    </div>
+    <div class="form-group">
+        <label>Description</label>
+        <input class="form-control" name="Description" />
+    </div>
+    <div class="form-group">
+        <label>Image</label>
+        <input id="ImageURL" name="ImageURL" type="hidden" />
+        <input class="form-control" id="imageUpload" name="Image" type="file" />
+        <img id="categoryImage" width="100" height="100" />
+    </div>
+    <div class="form-group">
+        <label>Is Featured?</label>
+        <input class="form-control" name="isFeatured" type="radio" value="true" />True
+        <input class="form-control" name="isFeatured" type="radio" value="false" />False
+    </div>
+    <button id="saveBtn" class="btn btn-danger" type="button">Save</button>
+    <button id="cancelBtn" class="btn btn-danger" type="button">Cancel</button>
+</form>
+<script>
+    //To use validate in Jquery we have to link of jquery validate library.
+    $('#createCategory').validate({
+        rules: {
+            Name: {
+                required: true,
+                minlength: 5,
+                maxlength: 50
+            },
+            Description: {
+                maxlength: 500
+            }
+        },
+        messages:
+        {
+            Name: {
+                required: 'Name is required',
+                minlength: 'Minimum length is 5',
+                maxlength: 'Maximum length is 50'
+            },
+            Description: {
+                maxlength: 'Max length is 500'
+            }
+        }
+    });
+
+    $("#imageUpload").change(function () {
+        var element = this;
+        var formData = new FormData();
+        var totalFiles = element.files.length;
+        for (var i = 0; i < totalFiles; i++) {
+            var file = element.files[i];
+            formData.append("Photo", file);
+        }
+
+        $.ajax(
+            {
+                type: 'POST',
+                url: '/Shared/UploadImage',
+                data: formData,
+                //When we have to upload the image then we have to add below three attributes.
+                dataType: 'json',
+                contentType: false,
+                processData: false
+            }).done(function (response) {
+                debugger;
+                console.log(response);
+                if (response.Success) {
+                    $("#categoryImage").attr("src", response.ImageURL);
+                    $("#ImageURL").val(response.ImageURL);
+                }
+            }).fail(function (XMLHttpRequest, textStatus, errorThrown) {
+                alert("Fail");
+            });
+
+    });
+
+    $("#saveBtn").click(function () {
+        if ($("#createCategory").valid()) {
+            $.ajax(
+                {
+                    type: 'post',
+                    url: '/Category/Create',
+                    data: $("#createCategory").serialize()
+                }).done(function (response) {
+                    $("#tableContainer").html(response);
+                    $("#actionContainer").html("");
+                    focusAction("tableContainer");
+
+                }).fail(function (XMLHttpRequest, textStatus, errorThrown) {
+                    swal({
+                        title: "Warning",
+                        text: "Please enter all required fields",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                    });
+                });
+        }
+        else {
+            swal({
+                title: "Js Warning",
+                text: "Please enter all required fields",
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+            });
+        }
+
+    });
+
+
+    $("#cancelBtn").click(function () {
+        $("#actionContainer").html("");
+        focusAction("tableContainer");
+    });
+
+</script>

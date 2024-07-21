@@ -1,0 +1,24 @@
+﻿
+@{
+    ViewBag.Title = "Products";
+}
+
+<div class="container">
+    <h2>Products</h2>
+    <div id="tableContainer">
+        @{
+            Html.RenderAction("ProductTable");
+            //Html.RenderAction("Create");
+        }
+    </div>
+    <div id="actionContainer">
+
+    </div>
+</div>
+<script>
+    function focusAction(controlToFocus) {
+        $('html,body').animate({
+            scrollTop: $("#" + controlToFocus).offset().top - 100
+        }, 1000);
+    }
+</script>
